@@ -51,6 +51,7 @@ import { physicsCompatSystem } from "./bit-physics";
 import { destroyAtExtremeDistanceSystem } from "./bit-destroy-at-extreme-distances";
 import { videoMenuSystem } from "../bit-systems/video-menu-system";
 import { objectMenuSystem } from "../bit-systems/object-menu";
+import { pdfMenuSystem } from "../bit-systems/pdf-menu-system";
 import { deleteEntitySystem } from "../bit-systems/delete-entity-system";
 import type { HubsSystems } from "aframe";
 import { Camera, Scene, WebGLRenderer } from "three";
@@ -60,6 +61,7 @@ import { networkDebugSystem } from "../bit-systems/network-debug";
 import qsTruthy from "../utils/qs_truthy";
 import { waypointSystem } from "../bit-systems/waypoint";
 import { objectSpawnerSystem } from "../bit-systems/object-spawner";
+import { pdfSystem } from "../bit-systems/pdf-system";
 
 declare global {
   interface Window {
@@ -227,6 +229,8 @@ export function mainTick(xrFrame: XRFrame, renderer: WebGLRenderer, scene: Scene
   objectMenuSystem(world, sceneEl.is("frozen"), APP.hubChannel!);
   videoMenuSystem(world, aframeSystems.userinput);
   videoSystem(world, hubsSystems.audioSystem);
+  pdfMenuSystem(world, sceneEl.is("frozen"));
+  pdfSystem(world);
   mediaFramesSystem(world);
   hubsSystems.audioZonesSystem.tick(hubsSystems.el);
   hubsSystems.gainSystem.tick();
