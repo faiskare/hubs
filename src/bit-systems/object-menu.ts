@@ -1,4 +1,4 @@
-import { defineQuery, hasComponent } from "bitecs";
+import { defineQuery, entityExists, hasComponent } from "bitecs";
 import type { HubsWorld } from "../app";
 import { HoveredRemoteRight, Interacted, ObjectMenu, ObjectMenuTarget } from "../bit-components";
 import { anyEntityWith, findAncestorWithComponent } from "../utils/bit-utils";
@@ -99,6 +99,11 @@ export function objectMenuSystem(world: HubsWorld, sceneIsFrozen: boolean, hubCh
   const menu = anyEntityWith(world, ObjectMenu) as EntityID | null;
   if (!menu) {
     return; // TODO: Fix initialization so that this is assigned via preload.
+  }
+
+  // TODO Should this happen in cleanup for entities with ObjectMenuTarget?
+  if (ObjectMenu.targetRef[menu] && !entityExists(world, ObjectMenu.targetRef[menu])) {
+    ObjectMenu.targetRef[menu] = 0;
   }
 
   ObjectMenu.targetRef[menu] = objectMenuTarget(world, menu, sceneIsFrozen);
