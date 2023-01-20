@@ -1,4 +1,5 @@
 import { localClientID, pendingMessages } from "../bit-systems/networking";
+import HubChannel from "./hub-channel";
 import { messageForLegacyRoomObjects } from "./message-for";
 import { getReticulumFetchUrl } from "./phoenix-utils";
 import { StorableMessage } from "./store-networked-state";
@@ -20,7 +21,7 @@ type EntityState = {
   message_id: string;
   entity_id: string;
   version: 1;
-  blob: string; // Parse this as a StorableMessage
+  blob: string; // Parse this to a StorableMessage
 };
 
 type EntityStateList = {
@@ -31,10 +32,9 @@ export function isStorableMessage(node: any): node is StorableMessage {
   return !!(node.version && node.creates && node.updates && node.deletes);
 }
 
-async function fetchSavedEntityStates(hubId: string) {
-  const response = await fetch(getReticulumFetchUrl(`/api/temp/entity_state?hub_id=${hubId}`) as URL);
-  const entityStateList: EntityStateList = await response.json();
-  const messages: StorableMessage[] = entityStateList.data.map(s => JSON.parse(s.blob));
+async function fetchSavedEntityStates(hubChannel: HubChannel) {
+  const entityStateList: EntityStateList = await hubChannel.listEntityStates();
+  const messages: StorableMessage[] = entityStateList.data.map(es => JSON.parse(es.blob));
   messages.forEach(m => {
     m.fromClientId = "reticulum";
     m.updates.forEach(update => {
@@ -44,8 +44,8 @@ async function fetchSavedEntityStates(hubId: string) {
   return messages;
 }
 
-export async function loadSavedEntityStates(hubId: string) {
-  const messages = await fetchSavedEntityStates(hubId);
+export async function loadSavedEntityStates(hubChannel: HubChannel, hubId: string) {
+  const messages = await fetchSavedEntityStates(hubChannel);
   if (hubId === APP.hub!.hub_id) {
     if (!localClientID) {
       throw new Error("Cannot apply stored messages without a local client ID");

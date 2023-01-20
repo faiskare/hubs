@@ -133,7 +133,7 @@ export async function changeHub(hubId, addToHistory = true, waypoint = null) {
   ]);
 
   if (qsTruthy("newLoader")) {
-    loadSavedEntityStates(hubId);
+    loadSavedEntityStates(APP.hubChannel, hubId);
     loadLegacyRoomObjects(hubId);
   } else {
     loadRoomObjects(hubId);

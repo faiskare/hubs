@@ -409,6 +409,12 @@ export default class HubChannel extends EventTarget {
     });
   };
 
+  listEntityStates = () => {
+    return new Promise((resolve, reject) => {
+      this.channel.push("list_entity_states").receive("ok", resolve).receive("error", reject);
+    });
+  };
+
   saveEntityState = (id, message, fileId, fileAccessToken, promotionToken) => {
     const payload = { id, message };
     if (fileId && promotionToken) {

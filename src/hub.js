@@ -597,7 +597,7 @@ function handleHubChannelJoined(entryManager, hubChannel, messageDispatch, data)
     "didConnectToNetworkedScene",
     () => {
       if (qsTruthy("newLoader")) {
-        loadSavedEntityStates(hub.hub_id);
+        loadSavedEntityStates(APP.hubChannel, hub.hub_id);
         loadLegacyRoomObjects(hub.hub_id);
       } else {
         // Append objects once we are in the NAF room since ownership may be taken.
