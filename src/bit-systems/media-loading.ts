@@ -149,12 +149,12 @@ function* loadMedia(world: HubsWorld, eid: EntityID) {
 }
 
 function* loadAndAnimateMedia(world: HubsWorld, eid: EntityID, signal: AbortSignal) {
+  if (MediaLoader.flags[eid] & MEDIA_LOADER_FLAGS.IS_OBJECT_MENU_TARGET) {
+    addComponent(world, ObjectMenuTarget, eid);
+  }
   const { value: media, canceled } = yield* cancelable(loadMedia(world, eid), signal);
   if (!canceled) {
     resizeAndRecenter(world, media, eid);
-    if (MediaLoader.flags[eid] & MEDIA_LOADER_FLAGS.IS_OBJECT_MENU_TARGET) {
-      addComponent(world, ObjectMenuTarget, eid);
-    }
     add(world, media, eid);
     setNetworkedDataWithoutRoot(world, APP.getString(Networked.id[eid])!, media);
     if (MediaLoader.flags[eid] & MEDIA_LOADER_FLAGS.ANIMATE_LOAD) {
