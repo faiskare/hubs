@@ -22,7 +22,7 @@ function* waitForMediaLoaded(world: HubsWorld, eid: EntityID) {
 
 function* spawnObjectJob(world: HubsWorld, spawner: EntityID) {
   const spawned = createNetworkedEntity(world, "media", {
-    src: APP.getString(ObjectSpawner.src[spawner]),
+    src: APP.getString(ObjectSpawner.src[spawner])!,
     recenter: false,
     resize: false,
     animateLoad: false,
