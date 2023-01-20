@@ -13,10 +13,7 @@ export interface StorableMessage extends Message {
   version: 1;
 }
 
-export async function tryPin(world: HubsWorld, eid: EntityID, hubChannel: HubChannel) {
-  if (!localClientID) throw new Error("Tried to unpin before connected to the channel...");
-  takeOwnership(world, eid);
-  Networked.creator[eid] = APP.getSid("reticulum");
+function storableMessageFor(world: HubsWorld, eid: EntityID) {
   const nid = APP.getString(Networked.id[eid])!;
   const storableMessage = messageForStorage(
     world,
@@ -32,27 +29,40 @@ export async function tryPin(world: HubsWorld, eid: EntityID, hubChannel: HubCha
       storableMessage!.updates.push(...updates);
     }
   });
+  return storableMessage;
+}
+
+export async function tryPin(world: HubsWorld, eid: EntityID, hubChannel: HubChannel) {
+  if (!localClientID) throw new Error("Tried to unpin before connected to the channel...");
+  takeOwnership(world, eid);
+  Networked.creator[eid] = APP.getSid("reticulum");
+  const nid = APP.getString(Networked.id[eid])!;
+  const message = storableMessageFor(world, eid);
   const fileId = null;
   const fileAccessToken = null;
   const promotionToken = null;
-  console.log("Pinning is disabled until storage for new networked objects is implemented in reticulum.", {
+  // TODO Support file uploads, promotion, etc
+  console.log("Saving entity state", {
     nid,
-    storableMessage,
+    message,
     fileId,
     fileAccessToken,
     promotionToken
   });
+  await hubChannel.saveEntityState(nid, message, fileId, fileAccessToken, promotionToken);
 }
 
 export async function tryUnpin(world: HubsWorld, eid: EntityID, hubChannel: HubChannel) {
   if (!localClientID) throw new Error("Tried to unpin before connected to the channel...");
   takeOwnership(world, eid);
   Networked.creator[eid] = APP.getSid(localClientID!);
-  const message = messageFor(world, [eid], [eid], [eid], [], false)!;
+  const message = storableMessageFor(world, eid);
   const fileId = null;
-  // unpinMessages.push(message);
-  console.log("Pinning/unpinning is disabled until storage for new networked objects is implemented in reticulum.", {
+  const nid = APP.getString(Networked.id[eid])!;
+  console.log("Deleting saved entity state.", {
+    nid,
     message,
     fileId
   });
+  await hubChannel.deleteEntityState(nid, message, fileId);
 }

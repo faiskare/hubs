@@ -16,29 +16,41 @@ type StoredRoomData = {
   extensionsUsed: ["HUBS_components"];
 };
 
+type EntityState = {
+  message_id: string;
+  entity_id: string;
+  version: 1;
+  blob: string; // Parse this as a StorableMessage
+};
+
+type EntityStateList = {
+  data: EntityState[];
+};
+
 export function isStorableMessage(node: any): node is StorableMessage {
   return !!(node.version && node.creates && node.updates && node.deletes);
 }
 
-async function fetchStoredRoomMessages(hubId: string) {
-  const objectsUrl = getReticulumFetchUrl(`/${hubId}/objects.gltf`) as URL;
-  const response = await fetch(objectsUrl);
-  const roomData: StoredRoomData = await response.json();
-  const messages: StorableMessage[] = roomData.nodes.filter(node => isStorableMessage(node));
+async function fetchSavedEntityStates(hubId: string) {
+  const response = await fetch(getReticulumFetchUrl(`/api/temp/entity_state?hub_id=${hubId}`) as URL);
+  const entityStateList: EntityStateList = await response.json();
+  const messages: StorableMessage[] = entityStateList.data.map(s => JSON.parse(s.blob));
+  messages.forEach(m => {
+    m.fromClientId = "reticulum";
+    m.updates.forEach(update => {
+      update.owner = "reticulum";
+    });
+  });
   return messages;
 }
 
-export async function loadStoredRoomData(hubId: string) {
-  const messages = await fetchStoredRoomMessages(hubId);
+export async function loadSavedEntityStates(hubId: string) {
+  const messages = await fetchSavedEntityStates(hubId);
   if (hubId === APP.hub!.hub_id) {
     if (!localClientID) {
       throw new Error("Cannot apply stored messages without a local client ID");
     }
     messages.forEach(m => {
-      m.fromClientId = "reticulum";
-      m.updates.forEach(update => {
-        update.owner = "reticulum";
-      });
       pendingMessages.push(m);
     });
   }

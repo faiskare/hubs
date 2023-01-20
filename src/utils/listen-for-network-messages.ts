@@ -17,6 +17,8 @@ export function listenForNetworkMessages(channel: PhoenixChannel, presenceEventE
   channel.on("naf", onNaf);
   channel.on("nafr", onNafr);
   channel.on("pin", onPin);
+  channel.on("entity_state_saved", onStorableMessage);
+  channel.on("entity_state_deleted", onStorableMessage);
 }
 
 function onJoin({ key }: { key: ClientID }) {
@@ -68,4 +70,9 @@ function onPin(pinMessage: PinMessage) {
     pinMessage.gltf_node.fromClientId = "reticulum";
     pendingMessages.push(pinMessage.gltf_node);
   }
+}
+
+function onStorableMessage(message: StorableMessage) {
+  message.fromClientId = "reticulum";
+  pendingMessages.push(message);
 }
