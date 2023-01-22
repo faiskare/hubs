@@ -68,10 +68,7 @@ export async function loadSavedEntityStates(hubChannel: HubChannel) {
   if (!localClientID) {
     throw new Error("Cannot load saved entity states without a local client ID.");
   }
-  console.log("LOADING SAVED ENTITIES...");
   const list = await listEntityStates(hubChannel);
-  console.log(list);
   const messages = parseStorableMessages(list);
-  console.log(messages);
   messages.forEach(onStorableMessage);
 }

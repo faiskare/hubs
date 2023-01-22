@@ -178,7 +178,6 @@ export function networkReceiveSystem(world: HubsWorld) {
         const updates = storedUpdates.get(nid) || [];
         updates.push(updateMessage);
         storedUpdates.set(nid, updates);
-        console.log(storedUpdates);
         continue;
       }
 

@@ -36,6 +36,5 @@ export async function loadLegacyRoomObjects(hubId: string) {
       // because all clients must agree on which netcode to use (hubs networking
       // systems or networked aframe) for a given object.
     }
-    console.log({ legacyRoomObjects, message });
   }
 }
