@@ -3,8 +3,8 @@ import type { HubsWorld } from "../app";
 import { HoveredRemoteRight, Interacted, ObjectMenu, ObjectMenuTarget } from "../bit-components";
 import { anyEntityWith, findAncestorWithComponent } from "../utils/bit-utils";
 import HubChannel from "../utils/hub-channel";
+import { saveEntityStateHierarchy, deleteEntityStateHierarchy } from "../utils/hub-channel-utils";
 import type { EntityID } from "../utils/networking-types";
-import { tryPin, tryUnpin } from "../utils/store-networked-state";
 import { setMatrixWorld } from "../utils/three-utils";
 import { isPinned } from "./networking";
 
@@ -33,9 +33,9 @@ function moveToTarget(world: HubsWorld, menu: EntityID) {
 
 function handleClicks(world: HubsWorld, menu: EntityID, hubChannel: HubChannel) {
   if (clicked(world, ObjectMenu.pinButtonRef[menu])) {
-    tryPin(world, ObjectMenu.targetRef[menu], hubChannel);
+    saveEntityStateHierarchy(hubChannel, world, ObjectMenu.targetRef[menu]);
   } else if (clicked(world, ObjectMenu.unpinButtonRef[menu])) {
-    tryUnpin(world, ObjectMenu.targetRef[menu], hubChannel);
+    deleteEntityStateHierarchy(hubChannel, world, ObjectMenu.targetRef[menu]);
   } else if (clicked(world, ObjectMenu.cameraFocusButtonRef[menu])) {
     console.log("Clicked focus");
   } else if (clicked(world, ObjectMenu.cameraTrackButtonRef[menu])) {

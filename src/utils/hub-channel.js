@@ -409,34 +409,6 @@ export default class HubChannel extends EventTarget {
     });
   };
 
-  listEntityStates = () => {
-    return new Promise((resolve, reject) => {
-      this.channel.push("list_entity_states").receive("ok", resolve).receive("error", reject);
-    });
-  };
-
-  saveEntityState = (id, message, fileId, fileAccessToken, promotionToken) => {
-    const payload = { id, message };
-    if (fileId && promotionToken) {
-      payload.file_id = fileId;
-      payload.file_access_token = fileAccessToken;
-      payload.promotion_token = promotionToken;
-    }
-    return new Promise((resolve, reject) => {
-      this.channel.push("save_entity_state", payload).receive("ok", resolve).receive("error", reject);
-    });
-  };
-
-  deleteEntityState = (id, message, fileId) => {
-    const payload = { id, message };
-    if (fileId) {
-      payload.file_id = fileId;
-    }
-    return new Promise((resolve, reject) => {
-      this.channel.push("delete_entity_state", payload).receive("ok", resolve).receive("error", reject);
-    });
-  };
-
   unpin = (id, fileId) => {
     const payload = { id };
     if (fileId) {
