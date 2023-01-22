@@ -80,7 +80,7 @@ export function networkReceiveSystem(world: HubsWorld) {
         createMessageDatas.delete(eid);
         world.nid2eid.delete(nid);
         removeEntity(world, eid);
-        console.log("Deleting ", APP.getString(nid));
+        // console.log("Deleting ", APP.getString(nid));
       }
 
       // TODO: Clear out any stored messages for this entity's children.
@@ -125,7 +125,7 @@ export function networkReceiveSystem(world: HubsWorld) {
         world.ignoredNids.add(nid);
       } else {
         const eid = renderAsNetworkedEntity(world, prefabName, initialData, nidString, creator);
-        console.log(`Received create message for ${nidString}. (eid: ${eid})`);
+        // console.log(`Received create message for ${nidString}. (eid: ${eid})`);
       }
     }
   }
@@ -134,7 +134,7 @@ export function networkReceiveSystem(world: HubsWorld) {
   enteredNetworkedQuery(world).forEach(eid => {
     const nid = Networked.id[eid];
     if (storedUpdates.has(nid)) {
-      console.log("Had stored updates for", APP.getString(nid), storedUpdates.get(nid));
+      // console.log("Had stored updates for", APP.getString(nid), storedUpdates.get(nid));
       const updates = storedUpdates.get(nid)!;
 
       for (let i = 0; i < updates.length; i++) {
@@ -142,7 +142,7 @@ export function networkReceiveSystem(world: HubsWorld) {
         if (partedClientIds.has(APP.getSid(update.owner))) {
           // We missed the frame when we would have taken soft ownership from this owner,
           // so modify the message to act as though we had done so.
-          console.log("Rewriting update message from client who left.", JSON.stringify(update));
+          // console.log("Rewriting update message from client who left.", JSON.stringify(update));
           update.owner = NAF.clientId;
           update.lastOwnerTime = update.timestamp + 1;
         }
@@ -162,17 +162,17 @@ export function networkReceiveSystem(world: HubsWorld) {
       const nid = APP.getSid(updateMessage.nid);
 
       if (world.ignoredNids.has(nid)) {
-        console.log(`Ignoring update for ignored entity ${updateMessage.nid}`);
+        // console.log(`Ignoring update for ignored entity ${updateMessage.nid}`);
         continue;
       }
 
       if (world.deletedNids.has(nid)) {
-        console.log(`Ignoring update for deleted entity ${updateMessage.nid}`);
+        // console.log(`Ignoring update for deleted entity ${updateMessage.nid}`);
         continue;
       }
 
       if (!world.nid2eid.has(nid)) {
-        console.log(`Holding onto an update for ${updateMessage.nid} because we don't have it yet.`);
+        // console.log(`Holding onto an update for ${updateMessage.nid} because we don't have it yet.`);
         // TODO What if we will NEVER be able to apply this update?
         // TODO It would be nice if we could squash these updates
         const updates = storedUpdates.get(nid) || [];
