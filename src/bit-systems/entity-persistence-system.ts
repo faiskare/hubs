@@ -1,27 +1,35 @@
-import { defineQuery } from "bitecs";
+import { defineQuery, entityExists, exitQuery, hasComponent } from "bitecs";
 import { HubsWorld } from "../app";
-import { Networked, Owned } from "../bit-components";
+import { Constraint, MediaPDF, NetworkedPDF, Owned } from "../bit-components";
 import HubChannel from "../utils/hub-channel";
 import { saveEntityState } from "../utils/hub-channel-utils";
-import { hasSavedEntityState, isNetworkInstantiated, localClientID } from "./networking";
+import { hasSavedEntityState, localClientID } from "./networking";
+import { PDFComponentMap } from "./pdf-system";
 
-const secondsBetweenSync = 5; // Tune this if we are writing too often
-const millisecondsBetweenTicks = 1000 * secondsBetweenSync;
-let nextTick = 0;
+const constraintExitQuery = exitQuery(defineQuery([Constraint, Owned]));
 
-const ownedNetworkedQuery = defineQuery([Networked, Owned]);
+const pdfQuery = defineQuery([NetworkedPDF, Owned]);
+
 export function entityPersistenceSystem(world: HubsWorld, hubChannel: HubChannel) {
   if (!localClientID) return; // Not connected yet
 
-  const now = world.time.elapsed;
-  if (now < nextTick) return;
-
-  nextTick = now + millisecondsBetweenTicks;
-
-  ownedNetworkedQuery(world).forEach(eid => {
-    if (hasSavedEntityState(world, eid) && !isNetworkInstantiated(eid)) {
-      // Only automatically sync state for non-root persistent entities, so that we never accidentally re-pin the root of an object
+  constraintExitQuery(world).forEach(function (eid) {
+    if (
+      entityExists(world, eid) &&
+      hasComponent(world, Owned, eid) &&
+      !hasComponent(world, Constraint, eid) &&
+      hasSavedEntityState(world, eid)
+    ) {
+      // We dropped a persistent entity. Save its state
       saveEntityState(hubChannel, world, eid);
+    }
+  });
+
+  pdfQuery(world).forEach(function (pdf) {
+    const component = (MediaPDF.map as PDFComponentMap).get(pdf)!;
+    if (component.persistenceDirtyFlag) {
+      component.persistenceDirtyFlag = false;
+      saveEntityState(hubChannel, world, pdf);
     }
   });
 }

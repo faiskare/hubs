@@ -16,6 +16,7 @@ export interface PDFComponent {
   texture: CanvasTexture;
   canvasContext: CanvasRenderingContext2D;
   page: number;
+  persistenceDirtyFlag: boolean;
 }
 
 export function inflatePDF(world: HubsWorld, eid: EntityID, params: PDFParams) {
@@ -35,7 +36,8 @@ export function inflatePDF(world: HubsWorld, eid: EntityID, params: PDFParams) {
     canvas,
     texture,
     canvasContext,
-    page: -1 // No page is loaded yet
+    page: -1, // No page is loaded yet
+    persistenceDirtyFlag: false
   });
   addComponent(world, Networked, eid);
   addComponent(world, NetworkedPDF, eid);

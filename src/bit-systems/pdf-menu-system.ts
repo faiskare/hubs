@@ -3,9 +3,11 @@ import { Text } from "troika-three-text";
 import type { HubsWorld } from "../app";
 import { HoveredRemoteRight, Interacted, MediaPDF, NetworkedPDF, PDFMenu } from "../bit-components";
 import { anyEntityWith, findAncestorWithComponent } from "../utils/bit-utils";
+import { saveEntityState } from "../utils/hub-channel-utils";
 import type { EntityID } from "../utils/networking-types";
 import { takeOwnership } from "../utils/take-ownership";
 import { setMatrixWorld } from "../utils/three-utils";
+import { hasSavedEntityState } from "./networking";
 import { PDFComponentMap } from "./pdf-system";
 
 function clicked(world: HubsWorld, eid: EntityID) {
@@ -53,17 +55,21 @@ function moveToTarget(world: HubsWorld, menu: EntityID) {
   setMatrixWorld(menuObj, targetObj.matrixWorld);
 }
 
+function setPage(world: HubsWorld, pdf: EntityID, pageNumber: number) {
+  const component = (MediaPDF.map as PDFComponentMap).get(pdf)!;
+  const numPages = component.pdf.numPages;
+  NetworkedPDF.page[pdf] = pageNumber === 0 ? numPages : pageNumber === numPages ? 1 : pageNumber;
+  takeOwnership(world, pdf);
+  component.persistenceDirtyFlag = true;
+}
+
 function handleClicks(world: HubsWorld, menu: EntityID) {
   if (clicked(world, PDFMenu.nextButtonRef[menu])) {
     const pdf = PDFMenu.targetRef[menu];
-    takeOwnership(world, pdf);
-    const numPages = (MediaPDF.map as PDFComponentMap).get(pdf)!.pdf.numPages;
-    NetworkedPDF.page[pdf] = NetworkedPDF.page[pdf] === numPages ? 1 : NetworkedPDF.page[pdf] + 1;
+    setPage(world, pdf, NetworkedPDF.page[pdf] + 1);
   } else if (clicked(world, PDFMenu.prevButtonRef[menu])) {
     const pdf = PDFMenu.targetRef[menu];
-    takeOwnership(world, pdf);
-    const numPages = (MediaPDF.map as PDFComponentMap).get(pdf)!.pdf.numPages;
-    NetworkedPDF.page[pdf] = NetworkedPDF.page[pdf] === 1 ? numPages : NetworkedPDF.page[pdf] - 1;
+    setPage(world, pdf, NetworkedPDF.page[pdf] - 1);
   }
 }
 
