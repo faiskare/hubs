@@ -1,7 +1,7 @@
-import { defineQuery, entityExists, hasComponent } from "bitecs";
+import { addComponent, defineQuery, entityExists, hasComponent } from "bitecs";
 import { Text } from "troika-three-text";
 import type { HubsWorld } from "../app";
-import { HoveredRemoteRight, Interacted, MediaPDF, NetworkedPDF, PDFMenu } from "../bit-components";
+import { EntityStateDirty, HoveredRemoteRight, Interacted, MediaPDF, NetworkedPDF, PDFMenu } from "../bit-components";
 import { anyEntityWith, findAncestorWithComponent } from "../utils/bit-utils";
 import { saveEntityState } from "../utils/hub-channel-utils";
 import type { EntityID } from "../utils/networking-types";
@@ -60,7 +60,7 @@ function setPage(world: HubsWorld, pdf: EntityID, pageNumber: number) {
   const numPages = component.pdf.numPages;
   NetworkedPDF.page[pdf] = pageNumber === 0 ? numPages : pageNumber === numPages ? 1 : pageNumber;
   takeOwnership(world, pdf);
-  component.persistenceDirtyFlag = true;
+  addComponent(world, EntityStateDirty, pdf);
 }
 
 function handleClicks(world: HubsWorld, menu: EntityID) {
