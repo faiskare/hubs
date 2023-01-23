@@ -18,6 +18,7 @@ export function listenForNetworkMessages(channel: PhoenixChannel, presenceEventE
   channel.on("nafr", onNafr);
   channel.on("entity_state_saved", onStorableMessage);
   channel.on("entity_state_deleted", onStorableMessage);
+  channel.on("entity_state_hierarchy_deleted", onStorableMessage);
 }
 
 function onJoin({ key }: { key: ClientID }) {
