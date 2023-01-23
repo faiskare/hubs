@@ -3,7 +3,7 @@ import { HubsWorld } from "../app";
 import { Networked, Owned } from "../bit-components";
 import HubChannel from "../utils/hub-channel";
 import { saveEntityState } from "../utils/hub-channel-utils";
-import { hasSavedEntityState, localClientID } from "./networking";
+import { hasSavedEntityState, isNetworkInstantiated, localClientID } from "./networking";
 
 const secondsBetweenSync = 5; // Tune this if we are writing too often
 const millisecondsBetweenTicks = 1000 * secondsBetweenSync;
@@ -19,7 +19,8 @@ export function entityPersistenceSystem(world: HubsWorld, hubChannel: HubChannel
   nextTick = now + millisecondsBetweenTicks;
 
   ownedNetworkedQuery(world).forEach(eid => {
-    if (hasSavedEntityState(world, eid)) {
+    if (hasSavedEntityState(world, eid) && !isNetworkInstantiated(eid)) {
+      // Only automatically sync state for non-root persistent entities, so that we never accidentally re-pin the root of an object
       saveEntityState(hubChannel, world, eid);
     }
   });
