@@ -1,8 +1,9 @@
-import { hasComponent } from "bitecs";
+import { entityExists, hasComponent } from "bitecs";
 import { HubsWorld } from "../app";
 import { Networked } from "../bit-components";
 // import { isCursorBufferUpdateMessage, storedUpdates } from "../bit-systems/network-receive-system";
 import { isNetworkInstantiated, localClientID } from "../bit-systems/networking";
+import { sleep } from "./async-utils";
 import HubChannel from "./hub-channel";
 import { messageForStorage } from "./message-for";
 import type { DeleteEntityStatePayload, EntityID, NetworkID, SaveEntityStatePayload } from "./networking-types";
@@ -71,6 +72,8 @@ export async function saveEntityStateHierarchy(hubChannel: HubChannel, world: Hu
   );
 }
 
+export const pinCooldownMS = 500;
+
 export async function deleteEntityStateHierarchy(hubChannel: HubChannel, world: HubsWorld, rootEid: EntityID) {
   if (!localClientID) throw new Error(`Tried to delete entity state hierarchy before connected to hub channel.`);
 
@@ -82,7 +85,22 @@ export async function deleteEntityStateHierarchy(hubChannel: HubChannel, world: 
     message: messageForStorage(world, [rootEid], [rootEid], [])
   };
   console.log("Deleting entity state hierarchy:", payload);
-  return push(hubChannel, "delete_entity_states_for_root_nid", payload);
+  const firstPush = await push(hubChannel, "delete_entity_states_for_root_nid", payload);
+
+  // HACK Reticulum doesn't protect against race conditions such as:
+  // - Client A calls deleteEntityStateHierarchy
+  // - Client B doesn't immediately received this message
+  // - Client B moves the entity and calls saveEntityState (to update to stored position)
+  // It may be necessary for reticulum to solve this problem.
+  // In the meantime, we can get around the problem by re-sending the delete message a second time.
+  // This will break rapid pinning / unpinning, so we also hide the pin button.
+  await sleep(pinCooldownMS);
+  if (entityExists(world, rootEid)) {
+    Networked.creator[rootEid] = APP.getSid(localClientID!);
+    takeOwnership(world, rootEid);
+    return push(hubChannel, "delete_entity_states_for_root_nid", payload);
+  }
+  return firstPush;
 }
 
 export async function deleteEntityState(hubChannel: HubChannel, world: HubsWorld, eid: EntityID) {

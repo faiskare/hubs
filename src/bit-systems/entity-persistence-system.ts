@@ -8,13 +8,17 @@ import { EntityID } from "../utils/networking-types";
 import { hasSavedEntityState, localClientID } from "./networking";
 
 const timers = new Map<EntityID, number>();
-// Use coroutines and timers to throttle calls to saveEntityState,
-// so that rapid changes to network state (e.g. scrubbing a video playhead)
-// does not flood reticulum.
+
+// Throttle calls to saveEntityState so that rapid changes
+// (e.g. scrubbing a video playhead) do not flood reticulum.
 function* saveEntityStateJob(hubChannel: HubChannel, world: HubsWorld, eid: EntityID, maxDelay: number) {
   while (world.time.elapsed < timers.get(eid)! && world.time.elapsed < maxDelay) {
     yield crNextFrame();
   }
+
+  // Don't save entity state if this entity is no longer persistent
+  if (!hasSavedEntityState(world, eid)) return;
+
   saveEntityState(hubChannel, world, eid);
 }
 
@@ -38,7 +42,7 @@ export function entityPersistenceSystem(world: HubsWorld, hubChannel: HubChannel
 
   // TODO Is it necessary to duplicate this array (since we are calling removeComponent within)?
   Array.from(entityStateDirtyQuery(world)).forEach(function (eid) {
-    if (hasComponent(world, Owned, eid) && hasSavedEntityState(world, eid)) {
+    if (hasSavedEntityState(world, eid)) {
       timers.set(eid, world.time.elapsed + saveDelayMS);
       if (!jobs.has(eid)) {
         jobs.set(eid, coroutine(saveEntityStateJob(hubChannel, world, eid, world.time.elapsed + maxSaveDelayMS)));
@@ -47,7 +51,7 @@ export function entityPersistenceSystem(world: HubsWorld, hubChannel: HubChannel
     removeComponent(world, EntityStateDirty, eid);
   });
 
-  // Don't both saving state if we lose ownership
+  // Don't bother saving state if we lose ownership
   ownedExitQuery(world).forEach(function (eid) {
     jobs.delete(eid);
   });
