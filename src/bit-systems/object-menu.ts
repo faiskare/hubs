@@ -100,10 +100,7 @@ function updateVisibility(world: HubsWorld, menu: EntityID, frozen: boolean) {
 const pinCooldownQuery = defineQuery([PinCooldown]);
 const hoveredQuery = defineQuery([HoveredRemoteRight]);
 export function objectMenuSystem(world: HubsWorld, sceneIsFrozen: boolean, hubChannel: HubChannel) {
-  const menu = anyEntityWith(world, ObjectMenu) as EntityID | null;
-  if (!menu) {
-    return; // TODO: Fix initialization so that this is assigned via preload.
-  }
+  const menu = anyEntityWith(world, ObjectMenu)!;
 
   // TODO Should this happen in cleanup for entities with ObjectMenuTarget?
   if (ObjectMenu.targetRef[menu] && !entityExists(world, ObjectMenu.targetRef[menu])) {
